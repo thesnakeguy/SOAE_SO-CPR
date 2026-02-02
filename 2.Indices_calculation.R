@@ -1,3 +1,9 @@
+### DESCRIPTION #############################################################################
+## With this code you can calculate:
+## ** the total abundance of plankton over time
+## ** Salpidae/Euphausiidae index
+#############################################################################################
+
 library(dplyr)
 library(cowplot)
 

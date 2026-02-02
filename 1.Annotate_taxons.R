@@ -1,3 +1,7 @@
+### DESCRIPTION ###############################################################################
+## This code can be used to create a lookup table to annotate species within the SO-CPR data ##
+## with WoRMS taxonomy
+###############################################################################################
 
 
 # Load the CPR data from 0.Download_SO-CPR_data.R
