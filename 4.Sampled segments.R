@@ -7,6 +7,7 @@
 library(sf)
 library(rnaturalearth)
 library(ggplot2)
+library(dplyr)
 library(SOmap)
 
 # Parameters
@@ -45,7 +46,6 @@ fronts <- SOmap_data$fronts_orsi %>% st_as_sf %>% st_transform(crs = 3031)
 # Plot sampled segments with community assignment information
 # Join community assignment info from 3.Network_analysis with the working data
 comm_df$Segment <- as.character(comm_df$Segment)
-comm_df$Comm_colors <- as.factor(comm_df$Comm_colors)
 
 # Merge community data with year data
 data_year_comm <- data_year %>%
@@ -58,7 +58,7 @@ comm_color_map <- setNames(comm_df$Comm_colors, comm_df$Community)
 sampled_segments_comm <- ggplot() +
   geom_sf(data = land, fill = "antiquewhite", color = "darkgrey", size = 0.2) +
   geom_sf(data = data_background, color = "grey80", size = 0.5, alpha = 0.2) +
-  geom_sf(data = data_year_comm, aes(color = Community), size = 3) +
+  geom_sf(data = data_year_comm, aes(color = Community), size = 5) +
   geom_sf(data = fronts, color = "steelblue", size = 1, pch = 2) +
   scale_color_manual(values = comm_color_map, name = "Community") +
   coord_sf(crs = st_crs(3031), ylim = c(-6500000, 6500000), xlim = c(-6500000, 6500000)) +
@@ -85,8 +85,8 @@ sampled_segments_comm
 
 ggsave(
   path = "Figures",
-  filename = paste0("Sampled_Segments_comm_", TargetYear, ".png"),
-  plot = sampled_segments,
+  filename = paste0("Sampled_segments_comm", TargetYear, ".png"),
+  plot = sampled_segments_comm,
   width = 8,
   height = 6,
   dpi = 300

@@ -23,8 +23,13 @@ TargetYear = "2022"
 cpr_data_input <- read.table("SO-CPR_raw_download.txt", sep = "\t")
 taxon_df_merged <- read.table("SO-CPR_ID_TaxonAnnotations.txt", sep = "\t")
 
+# Filter data for TargetYear
+cpr_data_year <- cpr_data_input %>% filter(Year == TargetYear)
+dim(cpr_data_year)
+cpr_data_year[is.na(cpr_data_year)] <- 0
+
 # Make unique segment identifier
-cpr_data_input <- cpr_data_input %>% mutate(Segment_uniq = paste(Ship_Code, Tow_Number, Date, Time, sep = "_"))
+cpr_data_year <- cpr_data_year %>% mutate(Segment_uniq = paste(Ship_Code, Tow_Number, Date, Time, sep = "_"))
 
 # Select only the taxa columns and build segments dataset
 colnames_metadata <- c("Tow_Number", "Ship_Code", "Time", "Date", 
@@ -34,25 +39,25 @@ colnames_metadata <- c("Tow_Number", "Ship_Code", "Time", "Date",
                        "Fluorescence", "Salinity", "Water_Temperature", 
                        "Photosynthetically_Active_Radiation", "Segment_uniq")
 
-taxa_data <- cpr_data_input[, -match(colnames_metadata, names(cpr_data_input))]
-segments <- cbind(cpr_data_input$Segment_uniq,
-                  cpr_data_input$Tow_Number,
-                  cpr_data_input$Latitude,
-                  cpr_data_input$Longitude,
-                  cpr_data_input$Year,
-                  taxa_data)
+taxa_data <- cpr_data_year[, -match(colnames_metadata, names(cpr_data_year))]
+
+# Because taxon data is sparse, we remove taxa that appear in fewer than 2.5% of samples
+n_samples <- nrow(taxa_data)
+occurrence <- colSums(taxa_data > 0, na.rm = TRUE) / n_samples # > 0 here because we want to take "presence" into account and not abundance
+taxa_data_2.5 <- taxa_data[, occurrence >= 0.025]
+dim(taxa_data_2.5)
+
+# We bind all necessary data together
+segments <- cbind(cpr_data_year$Segment_uniq,
+                  cpr_data_year$Tow_Number,
+                  cpr_data_year$Latitude,
+                  cpr_data_year$Longitude,
+                  cpr_data_year$Year,
+                  taxa_data_2.5)
 colnames(segments)[1:5] <- c("Segment", "Tow_Number", "Latitude", "Longitude", "Year")
 
-# Filter data for TargetYear
-sub_data <- segments %>% filter(Year == TargetYear)
-dim(sub_data)
-
-# Select only taxa columns for similarity calculation
-sub_data[is.na(sub_data)] <- 0
-
-
 # Compute similarity matrix (using Bray-Curtis as an example)
-distance_matrix <- vegdist(sub_data[,-c(1:5)], method = "bray")  # Dissimilarity matrix
+distance_matrix <- vegdist(segments[,-c(1:5)], method = "bray")  # Dissimilarity matrix
 distance_matrix <- as.matrix(distance_matrix)
 similarity_matrix <- 1 - distance_matrix  # Convert to similarity
 
@@ -62,10 +67,10 @@ net <- graph_from_adjacency_matrix(
   weighted = TRUE,
   diag = FALSE
 )
-V(net)$Segment <- sub_data$Segment 
-V(net)$Tow_Number <- sub_data$Tow_Number
-V(net)$Latitude <- sub_data$Latitude
-V(net)$Longitude <- sub_data$Longitude
+V(net)$Segment <- segments$Segment 
+V(net)$Tow_Number <- segments$Tow_Number
+V(net)$Latitude <- segments$Latitude
+V(net)$Longitude <- segments$Longitude
 
 # Network backbone extraction
 backbone_net <- backbone_from_weighted(net, model = "disparity", alpha = 0.05)
@@ -161,7 +166,7 @@ plot(Net_selected,
 
 write.table(comm_df, "Community_assignments.txt", quote = FALSE, sep = "\t")
 png(
-  filename = "Figures/Community_Network_Yearcoded.png",
+  filename = "Figures/Community_Network_2022.png",
   width = 800,     
   height = 600,    
   units = "px",    
