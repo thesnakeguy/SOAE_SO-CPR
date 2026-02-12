@@ -19,13 +19,29 @@ myfiles <- status$files[[1]]
 cpr_data_input <- read.csv(myfiles$file[grepl("AADC", myfiles$file)])
 
 # Column names of metadata and plankton species
-colnames_metadata <- c("Tow_Number", "Ship_Code", "Time", "Date", 
-                       "Month", "Year", "Season", "Latitude", 
-                       "Longitude", "Segment_No.", "Segment_Length", 
-                       "Total.abundance", "Phytoplankton_Colour_Index", 
-                       "Fluorescence", "Salinity", "Water_Temperature", 
-                       "Photosynthetically_Active_Radiation")
+colnames_metadata <- c(
+  "Tow_Number",
+  "Ship_Code",
+  "Time",
+  "Date",
+  "Month",
+  "Year",
+  "Season",
+  "Latitude",
+  "Longitude",
+  "Segment_No.",
+  "Segment_Length",
+  "Total.abundance",
+  "Phytoplankton_Colour_Index",
+  "Fluorescence",
+  "Salinity",
+  "Water_Temperature",
+  "Photosynthetically_Active_Radiation"
+)
 colnames_species <- setdiff(colnames(cpr_data_input), colnames_metadata)
 
 # Save the dataset
-write.table(cpr_data_input, file = "SO-CPR_raw_download.txt", sep="\t", quote = FALSE)
+write.table(cpr_data_input,
+            file = "SO-CPR_raw_download.txt",
+            sep = "\t",
+            quote = FALSE)
